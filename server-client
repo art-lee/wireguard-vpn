@@ -85,3 +85,7 @@ wg show wg0
 Шаги 9-13
 apt install qrencode
 qrencode -t ansiutf8 < iphone.conf
+
+
+Доп статья:
+https://telegra.ph/Nastrojka-VPN-03-18
