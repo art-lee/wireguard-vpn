@@ -4,88 +4,74 @@
 apt update && apt upgrade -y
 
 2. Установка Wireguard
-apt install wireguard
+apt install wireguard -y
 
-3. Разрешить проброс пакетов
+3. Создаем ключи сервера
+wg genkey | tee /etc/wireguard/server_privatekey | wg pubkey | tee /etc/wireguard/server_publickey
+
+4. Даем права на приватник
+chmod 600 /etc/wireguard/privatekey
+
+5. Проверям тип интерфейса
+ip a
+
+Скорее всего у вас сетевой интерфейс eth0, но возможно и другой, например, ens3 или как-то иначе. 
+Это название интерфейса используется далее в конфиге /etc/wireguard/wg0.conf, который мы сейчас создадим
+
+6. Создаем конфиг
+nano /etc/wireguard/wg0.conf
+
+7. Добавляем в конфиг
+[Interface]
+PrivateKey = <server_privatekey>
+Address = 10.0.0.1/24
+ListenPort = 51830
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+*Обратите внимание — в строках PostUp и PostDown использован как раз сетевой интерфейс eth0. 
+Если у вас другой — замените eth0 на ваш.
+
+9. Разрешить проброс пакетов
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 sysctl -p
 
-4. Генерируем ключи сервера
-wg genkey | tee /etc/wireguard/server_privatekey | wg pubkey | tee /etc/wireguard/server_publickey
+10. Включаем systemd демон с wireguard
+systemctl enable wg-quick@wg0.service
+systemctl start wg-quick@wg0.service
+systemctl status wg-quick@wg0.service
 
-5. Пишем конфиг
-touch /etc/wireguard/wg0.conf
+11. Создаём ключи клиента:
+wg genkey | tee /etc/wireguard/clien1_privatekey | wg pubkey | tee /etc/wireguard/clien1_publickey
 
-5.1. Добавляем в конфиг
-[Interface]
-Address = 10.0.0.1/24
-PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-ListenPort = 51820
-PrivateKey = <SERVER-PRIV-KEY>
+12. Открываем конфиг сервера клиента:
+nano /etc/wireguard/wg0.conf
 
-6. Запуск интерфейса
-wg-quick up wg0
+13. Добавляем клиента в конец
+[Peer]
+PublicKey = <clien1_publickey>
+AllowedIPs = 10.0.0.2/32
 
-7. Запуск сервиса
-systemctl enable wg-quick@wg0
-
-8. Проверка WG и сервиса
-wg show wg0
+14. Перезагружаем
+systemctl restart wg-quick@wg0
 systemctl status wg-quick@wg0
 
-8.1. В случае проблем остановка и перезапуск
-wg-quick down wg0
-systemctl start wg-quick@wg0
+15. Добавляем конфиг на клиенте (телефон, комп)
+nano client1.conf
 
-9. Генерируем ключи клиента
-wg genkey | tee /etc/wireguard/mac_privatekey | wg pubkey | tee /etc/wireguard/mac_publickey
-
-9.1. Обновяем на сервере файл wg0.conf
-vim /etc/wireguard/wg0.conf
-
-10. Добавляем
-...
-[Peer]
-PublicKey = <СLIENT-PUBLIC-KEY>
-AllowedIPs = 10.0.0.20/32
-
-11. Рестарт проверка сервиса
-systemctl restart wg-quick@wg0 && systemctl status wg-quick@wg0
-
-12. Локалка. Создаем файл конфигурации для клиента в блокноте (mac.conf):
-
+16. Добавляем в файл
 [Interface]
-PrivateKey = <PEER_2_PRIVATE_KEY>
-Address = 10.0.0.12/32
-
-[Peer]
-PublicKey = <SERVER-PUBKEY>
-Endpoint = <SERVER-IP>:51820
-AllowedIPs = 10.0.0.0/24
-PersistentKeepalive = 20
-
-13. Весь трафик. Создаем файл конфигурации для клиента в блокноте (mac.conf):
-
-[Interface]
-PrivateKey = <PEER_2_PRIVATE_KEY>
-Address = 10.0.0.20/32
+PrivateKey = <clien1_privatekey>
+Address = 10.0.0.2/32
 DNS = 8.8.8.8
 
 [Peer]
 PublicKey = <SERVER-PUBKEY>
-Endpoint = <SERVER-IP>:51820
+Endpoint = <SERVER-IP>:51830
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 20
 
-14. Проверка всех конектов
-wg show wg0
-
-15. Добавление конфига на смартфон
-Шаги 9-13
+17. Добавление конфига на смартфон
+11-14
 apt install qrencode
-qrencode -t ansiutf8 < iphone.conf
-
-
-Доп статья:
-https://telegra.ph/Nastrojka-VPN-03-18
+qrencode -t ansiutf8 < client1.conf
