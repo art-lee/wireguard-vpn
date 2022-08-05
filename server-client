@@ -6,6 +6,8 @@ apt update && apt upgrade -y
 2. Установка Wireguard
 apt install wireguard -y
 
+cd /etc/wireguard/
+
 3. Создаем ключи сервера
 wg genkey | tee /etc/wireguard/server_privatekey | wg pubkey | tee /etc/wireguard/server_publickey
 
