@@ -10,7 +10,7 @@ apt install wireguard -y
 wg genkey | tee /etc/wireguard/server_privatekey | wg pubkey | tee /etc/wireguard/server_publickey
 
 4. Даем права на приватник
-chmod 600 /etc/wireguard/privatekey
+chmod 600 /etc/wireguard/server_privatekey
 
 5. Проверям тип интерфейса
 ip a
