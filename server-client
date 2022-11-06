@@ -32,7 +32,7 @@ PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o 
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 *Обратите внимание — в строках PostUp и PostDown использован как раз сетевой интерфейс eth0. 
-Если у вас другой — замените eth0 на ваш.
+Если у вас другой — замените eth0 к примеру на ens3.
 
 9. Разрешить проброс пакетов
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
@@ -77,3 +77,6 @@ PersistentKeepalive = 20
 11-14
 apt install qrencode
 qrencode -t ansiutf8 < client1.conf
+
+18. Текущие подключения
+wg show
