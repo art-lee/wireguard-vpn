@@ -81,3 +81,19 @@ qrencode -t ansiutf8 < client1.conf
 
 18. Текущие подключения
 wg show
+
+
+
+Wireguard oracle 
+
+
+
+
+https://youtu.be/ocsVUGjVSpI
+https://github.com/pivpn/pivpn
+
+apt update   # update our VM
+apt upgrade   # upgrade our VM
+curl -L https://install.pivpn.io | bash   # Installing the Wireguard
+pivpn add   # Add a new user to Wireguard
+pivpn -qr   # To view the user's QR code
