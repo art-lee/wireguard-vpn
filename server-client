@@ -97,3 +97,4 @@ apt upgrade   # upgrade our VM
 curl -L https://install.pivpn.io | bash   # Installing the Wireguard
 pivpn add   # Add a new user to Wireguard
 pivpn -qr   # To view the user's QR code
+pivpn help #help
